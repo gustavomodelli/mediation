@@ -1,0 +1,38 @@
+library(tidyverse)
+library(mediation)
+
+## https://data.library.virginia.edu/introduction-to-mediation-analysis/
+
+myData <- read.csv('http://static.lib.virginia.edu/statlab/materials/data/mediationData.csv')
+
+model0 <- lm(Y ~ X, data = myData)
+summary(model0)
+
+
+ggplot(myData, aes(X, Y, color = M))+
+  geom_point()
+
+##we have to dfenife two models
+## X ~ M
+## X + M ~ Y
+
+model1 <- lm(M ~ X, data = myData)
+model2 <- lm(Y ~ X + M, data = myData)
+
+mediato <- mediate(model1, model2, treat = 'X', mediator = 'M', boot = TRUE,
+                   sims = 500)
+
+summary(mediato)
+
+##Jobs
+data(jobs)
+summary(jobs)
+dim(jobs)
+
+b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
+# Estimation via quasi-Bayesian approximation
+contcont <- mediate(b, c, sims=500, treat="treat", mediator="job_seek",
+                    boot = TRUE)
+summary(contcont)
+plot(contcont)
