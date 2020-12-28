@@ -1,0 +1,60 @@
+library(tidyverse)
+library(mediation)
+
+## https://data.library.virginia.edu/introduction-to-mediation-analysis/
+
+myData <- read.csv('http://static.lib.virginia.edu/statlab/materials/data/mediationData.csv')
+
+model0 <- lm(Y ~ X, data = myData)
+summary(model0)
+
+
+ggplot(myData, aes(X, Y, color = M))+
+  geom_point()
+
+##we have to dfenife two models
+## X ~ M
+## X + M ~ Y
+
+model1 <- lm(M ~ X, data = myData)
+model2 <- lm(Y ~ X + M, data = myData)
+
+mediato <- mediate(model1, model2, treat = 'X', mediator = 'M', boot = TRUE,
+                   sims = 500)
+
+summary(mediato)
+
+##Jobs
+data(jobs)
+summary(jobs)
+dim(jobs)
+
+b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
+# Estimation via quasi-Bayesian approximation
+contcont <- mediate(b, c, sims=500, treat="treat", mediator="job_seek",
+                    boot = TRUE)
+summary(contcont)
+plot(contcont)
+
+
+##considering sex as M
+a <- lm(sex ~ treat, data = jobs)
+b <- lm(depress2 ~ treat + sex, data = jobs)
+
+contcont <- mediate(a, b, sims=500, treat="treat", mediator="sex",
+                    boot = TRUE)
+
+summary(contcont)
+
+##alternative
+jobs2 <- jobs
+datasets <- list(T1 = jobs, T2 = jobs2) ##over different targets as necessary
+mediators <- c('job_seek', 'econ_hard', 'sex', 'age')
+treatment <- c('treat')
+outcome <- c('depress2')
+
+x <- mediations(datasets, treatment = treatment, outcome = outcome, mediators = mediators,
+                families = c('gaussian','gaussian'), sims = 50)
+
+summary(x)  
