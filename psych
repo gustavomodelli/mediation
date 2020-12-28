@@ -1,0 +1,43 @@
+library(tidyverse)
+library(mediation)
+library(psych) ##mediate
+
+## https://psych252.github.io/psych252book/mediation-moderation.html
+## http://personality-project.org/r/psych/HowTo/mediation.pdf
+## Restricted to linear models
+
+myData <- read.csv('http://static.lib.virginia.edu/statlab/materials/data/mediationData.csv')
+
+model0 <- lm(Y ~ X, data = myData)
+summary(model0)
+
+
+ggplot(myData, aes(X, Y, color = M))+
+  geom_point()
+
+##we have to dfenife two models
+## X ~ M
+## X + M ~ Y
+
+mediate(Y ~ X + (M), data = myData, n.iter = 100)
+
+## mediators between ()
+mediate(depress2 ~ treat + (job_seek) + (econ_hard) + (sex) + (age), data=jobs,
+        n.iter = 100)
+
+
+##other example
+data(Tal.Or)
+describe(Tal.Or) #descriptive statistics
+
+mod4.4 <- mediate(reaction ~ cond + (pmi), data =Tal_Or)
+mod4.4
+#print(mod4.4, digits = 4) # in order to get the precision of the Hayes (2013) p 99 example
+
+##using mediation
+modelm <- lm(pmi ~ cond, data = Tal.Or)
+modelx <- lm(reaction ~ cond + pmi, data = Tal.Or)
+
+x <- mediation::mediate(modelm, modelx, sims = 500, boot = TRUE, treat = 'cond',
+                        mediator = 'pmi')
+summary(x)
